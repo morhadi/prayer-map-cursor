@@ -72,32 +72,46 @@ function getPrayerPhase(lat, lon, date, calcMethodName, asrMethodName) {
         params.madhab = adhan.Madhab.Shafi;
     }
 
-    // Correctly handle the date for the specific location.
-    // We approximate the local time by shifting the UTC time by longitude/15 hours.
-    // This gives us the "local date" to ask Adhan to calculate for.
-    const timeOffsetMS = (lon / 15) * 3600 * 1000;
-    const localDateEstimate = new Date(date.getTime() + timeOffsetMS);
+    // Robust logic: Compare "Local Solar Time" with "Prayer Solar Times".
+    // This avoids timezone confusion and IDL issues.
+
+    // 1. Calculate current local time in minutes from midnight (0-1440)
+    // UTC Time (mins) + (Lon * 4 min/deg)
+    const utcMinutes = date.getUTCHours() * 60 + date.getUTCMinutes();
+    let localMinutes = utcMinutes + (lon * 4);
+
+    // Normalize to 0-1440 range
+    while (localMinutes < 0) localMinutes += 1440;
+    while (localMinutes >= 1440) localMinutes -= 1440;
 
     try {
-        // Calculate PrayerTimes for the estimated local date.
-        // Adhan uses the Year/Month/Day of the passed date object.
-        let prayerTimes = new adhan.PrayerTimes(coordinates, localDateEstimate, params);
+        // 2. Calculate prayer times for a standard date (we use the current date components)
+        // Adhan returns Date objects where the hours/minutes represent the prayer time in the "local" context of the input date.
+        // So p.fajr.getHours() gives the solar hour of Fajr.
+        const prayerTimes = new adhan.PrayerTimes(coordinates, new Date(), params);
 
-        // Determine phase
-        // Note: The prayerTimes dates are absolute timestamps.
+        // Helper to get minutes from midnight for a prayer time
+        const getMins = (d) => d.getHours() * 60 + d.getMinutes();
 
-        if (date >= prayerTimes.isha) {
-            return PrayerPhase.ISHA;
-        }
-        if (date >= prayerTimes.maghrib) return PrayerPhase.MAGHRIB;
-        if (date >= prayerTimes.asr) return PrayerPhase.ASR;
-        if (date >= prayerTimes.dhuhr) return PrayerPhase.DHUHR;
-        if (date >= prayerTimes.sunrise) return PrayerPhase.DUHA;
-        if (date >= prayerTimes.fajr) return PrayerPhase.FAJR;
+        const isha = getMins(prayerTimes.isha);
+        const maghrib = getMins(prayerTimes.maghrib);
+        const asr = getMins(prayerTimes.asr);
+        const dhuhr = getMins(prayerTimes.dhuhr);
+        const sunrise = getMins(prayerTimes.sunrise);
+        const fajr = getMins(prayerTimes.fajr);
 
-        // If current time is BEFORE Fajr of this "local day", it is effectively the Isha of the PREVIOUS day.
-        // Or, it could be that our localDateEstimate was slightly off (e.g. it's 1AM locally, so it's the same day, just early).
-        // In either case, "Before Fajr" corresponds to the Night (Isha) phase.
+        // 3. Compare localMinutes with prayer thresholds
+        // Handle the night wrapping (Isha can be late, Fajr early)
+        // Usually: Fajr < Sunrise < Dhuhr < Asr < Maghrib < Isha
+
+        if (localMinutes >= isha) return PrayerPhase.ISHA;
+        if (localMinutes >= maghrib) return PrayerPhase.MAGHRIB;
+        if (localMinutes >= asr) return PrayerPhase.ASR;
+        if (localMinutes >= dhuhr) return PrayerPhase.DHUHR;
+        if (localMinutes >= sunrise) return PrayerPhase.DUHA;
+        if (localMinutes >= fajr) return PrayerPhase.FAJR;
+
+        // If localMinutes < Fajr, it's the night (Isha) of the previous day
         return PrayerPhase.ISHA;
 
     } catch (e) {

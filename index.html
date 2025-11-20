@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Global Prayer Times</title>
+    <link rel="stylesheet" href="css/style.css">
+    <script src="lib/d3.v7.min.js"></script>
+    <script src="lib/topojson-client.min.js"></script>
+    <script src="lib/adhan.min.js"></script>
+    <script src="js/prayer-logic.js"></script>
+</head>
+<body>
+    <div id="controls">
+        <h1>Global Prayer Times</h1>
+
+        <div class="control-group">
+            <label for="time-slider">Time (UTC): <span id="time-display"></span></label>
+            <input type="range" id="time-slider" min="0" max="1439" value="720">
+        </div>
+
+        <div class="control-group">
+            <label for="projection-select">Projection</label>
+            <select id="projection-select">
+                <option value="mercator">Mercator</option>
+                <option value="orthographic">Globe</option>
+                <option value="equirectangular">Equirectangular</option>
+            </select>
+        </div>
+
+        <div class="control-group">
+            <label for="calc-method">Method</label>
+            <select id="calc-method">
+                <option value="MWL">Muslim World League</option>
+                <option value="ISNA">ISNA (North America)</option>
+                <option value="Egypt">Egyptian General Authority</option>
+                <option value="Makkah">Umm Al-Qura (Makkah)</option>
+                <option value="Karachi">Univ. of Islamic Sciences, Karachi</option>
+                <option value="Tehran">Institute of Geophysics, Tehran</option>
+            </select>
+        </div>
+
+        <div class="control-group">
+            <label for="asr-method">Asr Method</label>
+            <select id="asr-method">
+                <option value="Standard">Standard (Majority)</option>
+                <option value="Hanafi">Hanafi</option>
+            </select>
+        </div>
+
+        <div id="legend">
+            <div class="legend-item"><span class="color-box" style="background-color: #2c3e50;"></span> Isha (Night)</div>
+            <div class="legend-item"><span class="color-box" style="background-color: #e67e22;"></span> Fajr (Dawn)</div>
+            <div class="legend-item"><span class="color-box" style="background-color: #f1c40f;"></span> Duha (Sunrise-Zenith)</div>
+            <div class="legend-item"><span class="color-box" style="background-color: #3498db;"></span> Dhuhr (Noon)</div>
+            <div class="legend-item"><span class="color-box" style="background-color: #9b59b6;"></span> Asr (Afternoon)</div>
+            <div class="legend-item"><span class="color-box" style="background-color: #e74c3c;"></span> Maghrib (Sunset)</div>
+        </div>
+    </div>
+
+    <div id="map-container"></div>
+
+    <script src="js/app.js"></script>
+</body>
+</html>

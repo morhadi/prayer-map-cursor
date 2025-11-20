@@ -80,6 +80,6 @@ select, input[type="range"] {
 }
 
 .prayer-zone {
-    fill-opacity: 1.0;
+    fill-opacity: 0.5;
     stroke: none;
 }

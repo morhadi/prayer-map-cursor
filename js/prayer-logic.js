@@ -125,3 +125,8 @@ window.PrayerLogic = {
     PrayerPhase,
     PrayerColors
 };
+
+// Check for Adhan availability
+if (typeof adhan === 'undefined') {
+    console.error("Adhan library is not loaded! Prayer times cannot be calculated.");
+}

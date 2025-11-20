@@ -16,8 +16,9 @@ const svg = d3.select("#map-container")
 
 // Group for map layers
 const mapGroup = svg.append("g");
+// Render countries first, then prayers on top (with transparency)
+const countriesLayer = mapGroup.append("g").attr("id", "countries");
 const prayersLayer = mapGroup.append("g").attr("id", "prayers");
-const countriesLayer = mapGroup.append("g").attr("id", "countries"); // Render countries on top
 
 // Define Projections
 const projections = {
@@ -102,7 +103,18 @@ function setupControls() {
                 refreshMap();
             }
         });
+
+    // Add Zoom behavior
+    // We only enable zoom for Mercator/Equirectangular for now to keep it simple.
+    // For Orthographic, zoom usually means scaling the projection.
+    const zoom = d3.zoom()
+        .scaleExtent([1, 8])
+        .on("zoom", (event) => {
+            mapGroup.attr("transform", event.transform);
+        });
+
     svg.call(drag);
+    svg.call(zoom);
 }
 
 function updateTimeFromSlider() {
@@ -138,8 +150,8 @@ function updateVisualization() {
     const asrMethod = asrMethodSelect.value;
 
     // Generate a grid of values
-    // Resolution: Lower is faster. 1 degree gives decent contours without freezing UI.
-    const step = 1;
+    // Resolution: Lower is faster. 0.6 degrees improves quality while remaining responsive.
+    const step = 0.6;
     const values = [];
     const n = Math.ceil(360 / step); // width
     const m = Math.ceil(180 / step); // height
